@@ -14,5 +14,6 @@ htmlcov/
 *.pdf
 *.docx
 !src/knowledge/*.docx
+*.egg-info/
 .idea/
 .vscode/

@@ -26,13 +26,13 @@ class TestSettingsValidation:
         patched = {k: v for k, v in env_vars.items() if k != "TELEGRAM_BOT_TOKEN"}
         with patch.dict(os.environ, patched, clear=True):
             with pytest.raises(ValidationError, match="telegram_bot_token"):
-                Settings()  # type: ignore[call-arg]
+                Settings(_env_file=None)  # type: ignore[call-arg]
 
     def test_missing_gigachat_credentials_raises(self, env_vars: dict[str, str]) -> None:
         patched = {k: v for k, v in env_vars.items() if k != "GIGACHAT_CREDENTIALS"}
         with patch.dict(os.environ, patched, clear=True):
             with pytest.raises(ValidationError, match="gigachat_credentials"):
-                Settings()  # type: ignore[call-arg]
+                Settings(_env_file=None)  # type: ignore[call-arg]
 
     def test_default_log_level(self, env_vars: dict[str, str]) -> None:
         patched = {k: v for k, v in env_vars.items() if k != "LOG_LEVEL"}
