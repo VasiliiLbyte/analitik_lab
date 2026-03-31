@@ -51,10 +51,32 @@ src/
 ├── tools/
 │   └── pdf_generator.py # Генерация DOCX из шаблона
 ├── knowledge/
-│   └── proposal_template.docx  # Шаблон коммерческого предложения
+│   ├── proposal_template.docx       # Jinja2-шаблон КП (используется сейчас)
+│   ├── examples/
+│   │   ├── kp/                      # 8 реальных PDF КП (few-shot примеры)
+│   │   └── requests/                # Заявки на отбор проб (DOCX + PDF)
+│   ├── samples/
+│   │   └── application_template.docx  # Образец заявки
+│   └── prices/                      # Прейскурант (будет добавлен)
 └── schemas/
     └── state.py         # AgentState, IntakeData, ProposalData
 ```
+
+## Knowledge Base
+
+Папка `src/knowledge/` содержит базу знаний для AI-агентов.
+
+| Папка | Содержимое | Использование |
+|-------|-----------|---------------|
+| `proposal_template.docx` | Jinja2-шаблон КП | Фаза 1 — генерация DOCX через docxtpl |
+| `examples/kp/` | 8 реальных PDF коммерческих предложений | Фаза 2 — few-shot примеры для Proposal Agent |
+| `examples/requests/` | Заявки на отбор проб (DOCX + PDF) | Фаза 2 — обучение Intake Agent |
+| `samples/` | Образец заявки | Фаза 2 — шаблон для генерации заявок |
+| `prices/` | Прейскурант услуг | Фаза 2 — RAG (Qdrant) для расчёта стоимости |
+
+**Фаза 1 (сейчас):** Proposal Agent использует `proposal_template.docx` для генерации КП из данных, собранных Intake Agent.
+
+**Фаза 2 (планируется):** примеры из `examples/kp/` будут подгружаться как few-shot образцы в промпт Proposal Agent, а `prices/` будет индексирован в Qdrant для точного расчёта стоимости через RAG.
 
 ## Быстрый старт
 

@@ -14,7 +14,15 @@ from loguru import logger
 
 from src.schemas.state import ProposalData
 
-_DEFAULT_TEMPLATE = Path(__file__).resolve().parent.parent / "knowledge" / "proposal_template.docx"
+_KNOWLEDGE_DIR = Path(__file__).resolve().parent.parent / "knowledge"
+_DEFAULT_TEMPLATE = _KNOWLEDGE_DIR / "proposal_template.docx"
+
+# TODO(Phase 2): загружать few-shot примеры КП из knowledge/examples/kp/
+# для сравнения стиля и структуры при валидации сгенерированного документа.
+# Путь: _KNOWLEDGE_DIR / "examples" / "kp"
+
+# TODO(Phase 2): загружать прейскурант из knowledge/prices/
+# для автоматической подстановки актуальных цен вместо захардкоженных.
 
 
 def _prepare_context(data: ProposalData) -> dict:

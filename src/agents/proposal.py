@@ -16,6 +16,13 @@ from loguru import logger
 from src.schemas.state import AgentState, ProposalData, ProposalItem
 from src.tools.pdf_generator import generate_proposal_docx
 
+# TODO(Phase 2): подгружать few-shot примеры из knowledge/examples/kp/
+# и добавлять в system prompt как образцы стиля и структуры КП.
+# Это позволит LLM генерировать КП максимально близкие к реальным.
+
+# TODO(Phase 2): подключить RAG (Qdrant) для получения актуальных цен
+# из knowledge/prices/ вместо статического списка в промпте.
+
 PROPOSAL_SYSTEM_PROMPT = """\
 Ты — агент формирования коммерческих предложений лаборатории «Аналитик.Лаб».
 
