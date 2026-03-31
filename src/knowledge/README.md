@@ -19,9 +19,9 @@ knowledge/
 
 ### Фаза 1 (MVP) — сейчас
 - `proposal_template.docx` — шаблон, в который Proposal Agent подставляет данные через docxtpl
+- `examples/kp/` — few-shot PDF-примеры, которые подгружаются в system prompt Proposal Agent (до 3 релевантных)
 
 ### Фаза 2 (RAG) — планируется
-- `examples/kp/` — few-shot примеры для Proposal Agent (улучшение качества КП)
 - `examples/requests/` — примеры заявок для обучения Intake Agent
 - `prices/` — прейскурант → Qdrant RAG для точного расчёта стоимости
 - `samples/` — шаблоны документов для генерации

@@ -72,5 +72,6 @@ class AgentState(TypedDict, total=False):
     current_agent: str
     chat_id: int
     proposal_file_path: str | None
+    few_shot_examples: str | None
     is_complete: bool
     metadata: dict[str, Any]

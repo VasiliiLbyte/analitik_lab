@@ -25,6 +25,13 @@ def _bind_llm(node_fn, *, llm: GigaChat):
     return partial(node_fn, llm=llm)
 
 
+async def _proposal_node_with_state(state: AgentState, *, llm: GigaChat) -> dict:
+    """Оборачивает proposal_node, гарантируя наличие ключа few_shot_examples."""
+    if "few_shot_examples" not in state:
+        state = {**state, "few_shot_examples": None}
+    return await proposal_node(state, llm=llm)
+
+
 def build_graph(
     *,
     supervisor_llm: GigaChat,
@@ -47,7 +54,7 @@ def build_graph(
 
     graph.add_node("supervisor", _bind_llm(supervisor_node, llm=supervisor_llm))
     graph.add_node("intake", _bind_llm(intake_node, llm=intake_llm))
-    graph.add_node("proposal", _bind_llm(proposal_node, llm=proposal_llm))
+    graph.add_node("proposal", _bind_llm(_proposal_node_with_state, llm=proposal_llm))
 
     graph.add_edge(START, "supervisor")
     graph.add_edge("intake", "supervisor")

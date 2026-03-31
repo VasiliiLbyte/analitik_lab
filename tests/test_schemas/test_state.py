@@ -112,9 +112,20 @@ class TestAgentState:
         state: AgentState = {
             "messages": [],
             "intake_data": intake,
+            "few_shot_examples": None,
             "chat_id": 1,
             "current_agent": "intake",
             "is_complete": False,
         }
         assert state["intake_data"] is not None
         assert state["intake_data"].analysis_type == "вода"
+
+    def test_state_can_store_few_shot_examples(self) -> None:
+        state: AgentState = {
+            "messages": [],
+            "chat_id": 1,
+            "current_agent": "proposal",
+            "is_complete": False,
+            "few_shot_examples": "### Example 1 (water.pdf)\n...",
+        }
+        assert state["few_shot_examples"] is not None

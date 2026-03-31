@@ -9,7 +9,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command
 
-from src.graphs.main_graph import build_graph
+from src.graphs.main_graph import _proposal_node_with_state, build_graph
 from src.schemas.state import IntakeData
 
 
@@ -28,6 +28,17 @@ class TestBuildGraph:
             proposal_llm=llm,
         )
         assert graph is not None
+
+    @pytest.mark.asyncio
+    async def test_proposal_wrapper_sets_few_shot_default(self) -> None:
+        llm = _make_mock_llm()
+        state = {"messages": [], "chat_id": 1, "current_agent": "proposal", "is_complete": False}
+        with patch("src.graphs.main_graph.proposal_node", AsyncMock(return_value={"ok": True})) as mock_node:
+            result = await _proposal_node_with_state(state, llm=llm)
+
+        assert result == {"ok": True}
+        passed_state = mock_node.call_args.args[0]
+        assert passed_state["few_shot_examples"] is None
 
     def test_graph_has_expected_nodes(self) -> None:
         llm = _make_mock_llm()

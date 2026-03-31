@@ -125,3 +125,33 @@ class TestProposalNode:
 
         assert result["proposal_file_path"] is None
         assert result["is_complete"] is True
+
+    @pytest.mark.asyncio
+    async def test_includes_few_shot_examples_in_prompt(self) -> None:
+        llm = _make_llm_mock(VALID_LLM_RESPONSE)
+        few_shot = "### Example 1 (water.pdf)\nСодержание примера"
+
+        with (
+            patch("src.agents.proposal.generate_proposal_docx") as mock_gen,
+            patch("src.agents.proposal.load_kp_examples", return_value=few_shot),
+        ):
+            mock_gen.return_value = MagicMock(__str__=lambda s: "/tmp/test.docx")
+            await proposal_node(_make_state(), llm=llm)
+
+        call_args = llm.ainvoke.call_args.args[0]
+        assert few_shot in call_args[0].content
+
+    @pytest.mark.asyncio
+    async def test_falls_back_when_loader_fails(self) -> None:
+        llm = _make_llm_mock(VALID_LLM_RESPONSE)
+
+        with (
+            patch("src.agents.proposal.generate_proposal_docx") as mock_gen,
+            patch("src.agents.proposal.load_kp_examples", side_effect=RuntimeError("boom")),
+        ):
+            mock_gen.return_value = MagicMock(__str__=lambda s: "/tmp/test.docx")
+            result = await proposal_node(_make_state(), llm=llm)
+
+        assert result["is_complete"] is True
+        call_args = llm.ainvoke.call_args.args[0]
+        assert "### Example" not in call_args[0].content
