@@ -6,6 +6,7 @@ import asyncio
 import sys
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.session.aiohttp import AiohttpSession
 from langgraph.checkpoint.memory import MemorySaver
 from loguru import logger
 
@@ -63,7 +64,14 @@ async def main() -> None:
     set_graph(graph)
     logger.info("LangGraph граф собран и зарегистрирован")
 
-    bot = Bot(token=settings.telegram_bot_token)
+    if settings.telegram_proxy:
+        logger.info("Telegram proxy включен: {}", settings.telegram_proxy)
+        bot = Bot(
+            token=settings.telegram_bot_token,
+            session=AiohttpSession(proxy=settings.telegram_proxy),
+        )
+    else:
+        bot = Bot(token=settings.telegram_bot_token)
     dp = Dispatcher()
 
     dp.message.middleware(LoggingMiddleware())

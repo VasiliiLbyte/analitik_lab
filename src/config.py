@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     )
 
     telegram_bot_token: str = Field(min_length=1)
+    telegram_proxy: str | None = None
     gigachat_credentials: str = Field(min_length=1)
     gigachat_scope: str = "GIGACHAT_API_PERS"
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"

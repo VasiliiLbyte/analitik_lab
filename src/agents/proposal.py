@@ -1,6 +1,6 @@
 """Proposal Agent — формирует коммерческое предложение на основе собранных данных.
 
-Использует GigaChat 2 Lite для структурирования данных в ProposalData,
+Использует GigaChat для структурирования данных в ProposalData,
 затем генерирует DOCX через pdf_generator.
 """
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from datetime import date
 
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_gigachat import GigaChat
 from loguru import logger
 
@@ -71,7 +71,7 @@ def create_proposal_llm(
     return GigaChat(
         credentials=credentials,
         scope=scope,
-        model="GigaChat-2-Lite",
+        model="GigaChat",
         verify_ssl_certs=False,
         timeout=30,
     )
@@ -122,7 +122,7 @@ async def proposal_node(
 
     messages = [
         SystemMessage(content=_build_system_prompt(few_shot_examples=few_shot_examples)),
-        SystemMessage(content=f"Данные клиента: {intake_json}"),
+        HumanMessage(content=f"Данные клиента: {intake_json}"),
     ]
 
     try:

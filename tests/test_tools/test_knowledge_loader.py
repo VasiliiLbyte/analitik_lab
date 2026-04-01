@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 
-from src.tools.knowledge_loader import load_kp_examples
+from src.tools.knowledge_loader import build_kp_examples_index, load_kp_examples
 
 
 def _make_pdf(path: Path) -> None:
@@ -76,3 +77,42 @@ def test_skips_unreadable_or_empty_files(tmp_path: Path, monkeypatch) -> None:
     assert "ok.pdf" in result
     assert "bad.pdf" not in result
     assert "empty.pdf" not in result
+
+
+def test_uses_prebuilt_index_when_available(tmp_path: Path, monkeypatch) -> None:
+    index_path = tmp_path / "kp_index.json"
+    index_path.write_text(
+        json.dumps(
+            [
+                {"filename": "water.pdf", "text": "вода анализ вода"},
+                {"filename": "soil.pdf", "text": "почва анализ"},
+            ],
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_extract(_: Path) -> str:
+        raise AssertionError("PDF extraction should not be called when index exists")
+
+    monkeypatch.setattr("src.tools.knowledge_loader._extract_pdf_text", fake_extract)
+    result = load_kp_examples(query_text="вода", examples_dir=tmp_path, index_path=index_path)
+
+    assert result is not None
+    assert "water.pdf" in result
+
+
+def test_builds_index_from_pdf_files(tmp_path: Path, monkeypatch) -> None:
+    _make_pdf(tmp_path / "one.pdf")
+    _make_pdf(tmp_path / "two.pdf")
+
+    def fake_extract(path: Path) -> str:
+        return f"данные {path.stem}"
+
+    monkeypatch.setattr("src.tools.knowledge_loader._extract_pdf_text", fake_extract)
+    index_path = build_kp_examples_index(examples_dir=tmp_path, index_path=tmp_path / "idx.json")
+
+    assert index_path.exists()
+    payload = json.loads(index_path.read_text(encoding="utf-8"))
+    assert len(payload) == 2
+    assert payload[0]["filename"] == "one.pdf"

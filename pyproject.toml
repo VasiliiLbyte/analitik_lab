@@ -9,6 +9,7 @@ dependencies = [
     "langchain-gigachat>=0.5,<1",
     "langchain-core>=1.0,<2",
     "docxtpl>=0.18,<1",
+    "aiohttp-socks>=0.10,<1",
     "python-docx>=1.1,<2",
     "pydantic>=2.0,<3",
     "pydantic-settings>=2.0,<3",

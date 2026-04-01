@@ -1,11 +1,11 @@
 """Intake & Clarification Agent — собирает информацию о заказе через уточняющие вопросы.
 
-Использует GigaChat 2 Lite для анализа диалога и определения недостающих данных.
+Использует GigaChat для анализа диалога и определения недостающих данных.
 """
 
 from __future__ import annotations
 
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_gigachat import GigaChat
 from loguru import logger
 
@@ -48,7 +48,7 @@ def create_intake_llm(
     return GigaChat(
         credentials=credentials,
         scope=scope,
-        model="GigaChat-2-Lite",
+        model="GigaChat",
         verify_ssl_certs=False,
         timeout=30,
     )
@@ -69,7 +69,7 @@ async def intake_node(
     conversation = [SystemMessage(content=INTAKE_SYSTEM_PROMPT)]
     if intake_data.missing_fields():
         status = f"Уже известно: {intake_data.model_dump_json(exclude_none=True)}"
-        conversation.append(SystemMessage(content=status))
+        conversation.append(HumanMessage(content=status))
     conversation.extend(messages)
 
     if llm is None:

@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_gigachat import GigaChat
 from langgraph.types import Command
 from loguru import logger
@@ -50,7 +50,7 @@ def create_supervisor_llm(
     return GigaChat(
         credentials=credentials,
         scope=scope,
-        model="GigaChat-2-Pro",
+        model="GigaChat",
         verify_ssl_certs=False,
         timeout=30,
     )
@@ -96,7 +96,7 @@ async def supervisor_node(
     messages = list(state.get("messages", []))
     conversation = [
         SystemMessage(content=SUPERVISOR_SYSTEM_PROMPT),
-        SystemMessage(content=f"Статус intake_data: {intake_status}"),
+        HumanMessage(content=f"Контекст по заявке: {intake_status}"),
         *messages[-5:],
     ]
 

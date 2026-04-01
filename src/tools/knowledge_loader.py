@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from loguru import logger
 
 _KNOWLEDGE_DIR = Path(__file__).resolve().parent.parent / "knowledge"
 _DEFAULT_EXAMPLES_DIR = _KNOWLEDGE_DIR / "examples" / "kp"
+_DEFAULT_INDEX_PATH = _KNOWLEDGE_DIR / "examples" / "kp_index.json"
 _MAX_CHARS_PER_EXAMPLE = 1400
 _MAX_TOTAL_CHARS = 4200
 
@@ -54,10 +56,55 @@ def _safe_examples_dir(examples_dir: Path) -> Path:
     return examples_dir.resolve()
 
 
+def _load_index(index_path: Path) -> list[tuple[Path, str]]:
+    if not index_path.exists():
+        return []
+    try:
+        raw = json.loads(index_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.warning("Не удалось прочитать индекс примеров {}: {}", index_path, exc)
+        return []
+    entries: list[tuple[Path, str]] = []
+    for item in raw:
+        filename = str(item.get("filename", "")).strip()
+        text = _normalize(str(item.get("text", "")))
+        if filename and text:
+            entries.append((Path(filename), text[:_MAX_CHARS_PER_EXAMPLE]))
+    return entries
+
+
+def build_kp_examples_index(
+    *,
+    examples_dir: Path | None = None,
+    index_path: Path | None = None,
+) -> Path:
+    """Офлайн-индексация PDF примеров в JSON для быстрого чтения."""
+    target_dir = _safe_examples_dir(examples_dir or _DEFAULT_EXAMPLES_DIR)
+    output = index_path or _DEFAULT_INDEX_PATH
+    payload: list[dict[str, str]] = []
+    for pdf_path in sorted(target_dir.glob("*.pdf")):
+        try:
+            text = _extract_pdf_text(pdf_path)
+        except Exception as exc:
+            logger.warning("Пропускаем PDF {} из-за ошибки чтения: {}", pdf_path.name, exc)
+            continue
+        snippet = _normalize(text)[:_MAX_CHARS_PER_EXAMPLE]
+        if snippet:
+            payload.append({"filename": pdf_path.name, "text": snippet})
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    logger.info("Индекс примеров сохранен: {} ({} файлов)", output, len(payload))
+    return output
+
+
 def load_kp_examples(
     query_text: str = "",
     *,
     examples_dir: Path | None = None,
+    index_path: Path | None = None,
     top_k: int = 3,
 ) -> str | None:
     """Загружает 2-3 релевантных PDF-примера и возвращает few-shot строку."""
@@ -70,19 +117,25 @@ def load_kp_examples(
         return None
 
     candidates: list[tuple[int, Path, str]] = []
-    for pdf_path in sorted(target_dir.glob("*.pdf")):
-        try:
-            text = _extract_pdf_text(pdf_path)
-        except Exception as exc:
-            logger.warning("Пропускаем PDF {} из-за ошибки чтения: {}", pdf_path.name, exc)
-            continue
-        if not text:
-            continue
-        snippet = _normalize(text)[:_MAX_CHARS_PER_EXAMPLE]
-        if not snippet:
-            continue
-        score = _score_relevance(snippet, query_text)
-        candidates.append((score, pdf_path, snippet))
+    entries = _load_index(index_path or _DEFAULT_INDEX_PATH)
+    if entries:
+        for path, snippet in entries:
+            score = _score_relevance(snippet, query_text)
+            candidates.append((score, path, snippet))
+    else:
+        for pdf_path in sorted(target_dir.glob("*.pdf")):
+            try:
+                text = _extract_pdf_text(pdf_path)
+            except Exception as exc:
+                logger.warning("Пропускаем PDF {} из-за ошибки чтения: {}", pdf_path.name, exc)
+                continue
+            if not text:
+                continue
+            snippet = _normalize(text)[:_MAX_CHARS_PER_EXAMPLE]
+            if not snippet:
+                continue
+            score = _score_relevance(snippet, query_text)
+            candidates.append((score, pdf_path, snippet))
 
     if not candidates:
         return None
@@ -102,3 +155,7 @@ def load_kp_examples(
         total_chars += len(block)
 
     return "\n\n".join(blocks) if blocks else None
+
+
+if __name__ == "__main__":
+    build_kp_examples_index()

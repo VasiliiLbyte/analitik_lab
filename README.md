@@ -80,6 +80,7 @@ Few-shot механизм:
 - Загружаются PDF из `src/knowledge/examples/kp/`
 - Выбираются до 3 самых релевантных примеров по лексическому совпадению с запросом клиента
 - При ошибке чтения PDF агент продолжает работу без few-shot (graceful fallback)
+- Для ускорения можно заранее собрать индекс `src/knowledge/examples/kp_index.json`, чтобы не парсить PDF на каждый запрос
 
 **Фаза 2 (планируется):** `prices/` будет индексирован в Qdrant для точного расчёта стоимости через RAG.
 
@@ -112,10 +113,15 @@ cp .env.example .env
 
 ```ini
 TELEGRAM_BOT_TOKEN=ваш-токен-от-botfather
+# Опционально для сетей с блокировками Telegram (v2rayN)
+# TELEGRAM_PROXY=socks5://127.0.0.1:10808
 GIGACHAT_CREDENTIALS=ваши-credentials-от-sber
 GIGACHAT_SCOPE=GIGACHAT_API_PERS
 LOG_LEVEL=INFO
 ```
+
+Если Telegram недоступен напрямую (таймауты/SSL handshake), включите прокси:
+- `TELEGRAM_PROXY=socks5://127.0.0.1:10808` (обычно для v2rayN Mixed Port)
 
 ### Запуск
 
